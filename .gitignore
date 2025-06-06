@@ -1,6 +1,7 @@
 # Ignore all local env files
 .env.local
+.env
 
-!/frontend/.env.local
+frontend/.env.local
 
-!/backend/.env
+backend/.env
