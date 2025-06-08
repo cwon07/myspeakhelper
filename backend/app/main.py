@@ -1,15 +1,16 @@
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import FastAPI, HTTPException, UploadFile, File, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import os
 from dotenv import load_dotenv
+from supabase import Client
+from app.utils.supabase_auth import get_current_user, supabase
 import openai
 import json
 import re
 import uvicorn
 from io import BytesIO
 
-#load environment variables from .env file
 load_dotenv()
 openai_api_key = os.getenv("OPENAI_API_KEY")
 
@@ -27,6 +28,10 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
+class PracticeEntryIn(BaseModel):
+    prompt: str
+    response: str
+
 class TextRequest(BaseModel):
     text: str
 
@@ -40,6 +45,25 @@ class GenerateRequest(BaseModel):
 class TranslateRequest(BaseModel):
     text: str
     target_language: str = "en"
+
+@app.post("/practice-history", status_code=201)
+async def create_practice_entry(
+    entry: PracticeEntryIn,
+    user=Depends(get_current_user),
+):
+    """
+    Save a new practice entry to Supabase.
+    The RLS policy ensures only this user's entries get inserted under their own user_id.
+    """
+    data = {
+        "user_id": user.id,
+        "prompt": entry.prompt,
+        "response": entry.response,
+    }
+    res = supabase.table("practice_history").insert(data).execute()
+    if res.error:
+        raise HTTPException(status_code=500, detail=res.error.message)
+    return {"status":"ok", "entry": res.data[0]}
 
 # endpoint: improve email tone and grammar
 @app.post("/email-check")
