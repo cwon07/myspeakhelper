@@ -1,7 +1,11 @@
 import { useState, FormEvent } from 'react'
 import useSpeechSynthesis from '@/hooks/useSpeechSynthesis'
+import { useSession, useSupabaseClient } from '@supabase/auth-helpers-react'
 
 const API = process.env.NEXT_PUBLIC_API_URL
+
+const session = useSession()
+const supabase = useSupabaseClient()
 
 async function practiceSpeaking(promptText: string) {
     const res = await fetch(`${API}/speaking-practice`, {
@@ -22,12 +26,24 @@ export default function SpeakingPracticePage() {
     
     const { play, pause, resume, stop, status} = useSpeechSynthesis()
 
-    async function onSubmit(e: FormEvent<HTMLFormElement>) {
+    async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
         setError('')
         setLoading(true)
+        stop()
+
         try {
             const reply = await practiceSpeaking(input)
+            if (session) {
+                await fetch('/api/save-practice', {
+                    method:'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${session.access_token}`,
+                    },
+                    body: JSON.stringify({ prompt: input, response: reply }),
+                })
+            }
             setConversation(prev => [
                 ...prev,
                 `You: ${input}`,
