@@ -1,10 +1,17 @@
-import { useState } from "react";
-import { useSupabaseClient } from "@supabase/auth-helpers-react";
+import { useState, useEffect } from "react";
+import { useSupabaseClient, useSession } from "@supabase/auth-helpers-react";
+import { useRouter } from "next/router";
 
 export default function LoginPage() {
     const supabase = useSupabaseClient()
+    const session = useSession()
+    const router = useRouter()
     const [email, setEmail] = useState('')
     const [message, setMessage] = useState('')
+
+    useEffect(() => {
+        if (session) router.replace('/')
+    }, [session, router])
 
     async function sendMagicLink(e: React.FormEvent) {
         e.preventDefault()
