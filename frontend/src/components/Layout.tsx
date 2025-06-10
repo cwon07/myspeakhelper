@@ -1,11 +1,21 @@
 import Link from 'next/link'
 import React, { ReactNode } from 'react'
+import { useSession, useSupabaseClient } from '@supabase/auth-helpers-react'
 
 type Props = {
     children: ReactNode
 }
 
 export default function Layout({ children }: Props) {
+
+    const session = useSession()
+    const supabase = useSupabaseClient()
+
+    const handleLogout = async () => {
+        await supabase.auth.signOut()
+    }
+
+
     return (
         <div className='flex flex-col min-h-screen'>
             {/* HEADER */}
@@ -31,6 +41,23 @@ export default function Layout({ children }: Props) {
                         <Link href="/speech-to-text" className='text-gray-700 hover:text-blue-600'>
                             Speech-to-Text
                         </Link>
+                        {/* Auth buttons */}
+                        {session ? (
+                            <button
+                                onClick={handleLogout}
+                                className='ml-4 bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600'
+                                type='button'
+                            >
+                                Log Out
+                            </button>
+                        ) : (
+                            <Link
+                                href="/login"
+                                className='ml-4 bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600'
+                            >
+                                Log In
+                            </Link>
+                        )}
                     </nav>
                 </div>
             </header>
