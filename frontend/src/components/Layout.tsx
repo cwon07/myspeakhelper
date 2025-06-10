@@ -54,6 +54,7 @@ export default function Layout({ children }: Props) {
                             <Link
                                 href="/login"
                                 className='ml-4 bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600'
+                                type='button'
                             >
                                 Log In
                             </Link>
